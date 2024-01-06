@@ -58,6 +58,13 @@ Function to call when tick. Passed function must have three arguments, first is 
   :type 'function
   :group 'simple-pomodoro)
 
+(defcustom simple-pomodoro-notification-function nil
+  "
+Function to call when state changed. Passed function must have one argument, first is symbol what is type of timer, such as `task' `short-break' `long-break', `stopped`.
+"
+  :type 'function
+  :group 'simple-pomodoro)
+
 ;; global variables
 
 (defvar simple-pomodoro--task-count 0
@@ -80,6 +87,12 @@ Function to call when tick. Passed function must have three arguments, first is 
 
 (defvar simple-pomodoro--end-time 0
   "Start time of current `simple-pomodoro--timer'.")
+
+(defun simple-pomodoro--notify (state)
+  "Notify `STATE' to user."
+  (when (and simple-pomodoro-notification-function
+             (functionp simple-pomodoro-notification-function))
+    (funcall simple-pomodoro-notification-function state)))
 
 (defun simple-pomodoro--next-state (state)
   "Change state of pomodoro to next state from `STATE'."
@@ -107,7 +120,8 @@ Function to call when tick. Passed function must have three arguments, first is 
    (t
     (error "Invalid state: %s" state))
    )
-  )
+
+  (simple-pomodoro--notify simple-pomodoro--state))
 
 (defun simple-pomodoro--tick ()
   "Tick function for pomodoro. This function calls per second."
