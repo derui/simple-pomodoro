@@ -94,6 +94,8 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
 (defvar simple-pomodoro--end-time 0
   "Start time of current `simple-pomodoro--timer'.")
 
+;; functions
+
 (defun simple-pomodoro--notify (state)
   "Notify `STATE' to user."
   (when (and simple-pomodoro-notification-function
@@ -139,9 +141,7 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
       (funcall simple-pomodoro-tick-function
                (time-to-seconds elapsed-time)
                (time-to-seconds duration-time)
-               simple-pomodoro--state))
-    )
-  )
+               simple-pomodoro--state))))
 
 (defun simple-pomodoro--finish ()
   "Finish function for pomodoro. This function calls when timer is finished."
@@ -182,8 +182,7 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
   
   (setq simple-pomodoro--task-count 0
         simple-pomodoro--cycle-count 0
-        simple-pomodoro--state 'stopped
-        ))
+        simple-pomodoro--state 'stopped))
 
 (defun simple-pomodoro-start ()
   "Start pomodoro."
