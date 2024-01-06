@@ -100,7 +100,7 @@ Function to call when tick. Passed function must have three arguments, first is 
   )
 
 (defun simple-pomodoro--tick ()
-  "Tick function for pomodoro."
+  "Tick function for pomodoro. This function calls per second."
 
   (let* ((elapsed-time (time-since simple-pomodoro--start-time))
          (duration-time (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time)))
@@ -110,10 +110,12 @@ Function to call when tick. Passed function must have three arguments, first is 
                (time-to-seconds elapsed-time)
                (time-to-seconds duration-time)
                simple-pomodoro--state))
-    (when (<= elapsed-time duration-time)
-      (simple-pomodoro--next-state simple-pomodoro--state))
     )
   )
+
+(defun simple-pomodoro--finish ()
+  "Finish function for pomodoro. This function calls when timer is finished."
+  (simple-pomodoro--next-state simple-pomodoro--state))
 
 (defun simple-pomodoro--start-timer (minutes)
   "Start timer for pomodoro with `MINUTES'."
