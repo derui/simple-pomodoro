@@ -6,7 +6,7 @@
 ;; URL: 
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "27.1"))
-;; Keywords: { KEYWORDS }
+;; Keywords: timer
 
 ;;; Commentary:
 ;;
@@ -17,6 +17,10 @@
 ;;
 ;; Reset pomodoro timer and count
 ;;   M-x simple-pomodoro-reset
+
+;;: Customization:
+;; You can customize some variables. Use customize-group or setq.
+;;   M-x customize-group simple-pomodoro
 
 ;;; Code:
 
@@ -45,13 +49,14 @@
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-cycle-task-count 4
-  "Count of a cycle"
+  "Count of a cycle. Default is 4 that means 4 task and short break."
   :type 'integer
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-tick-function nil
   "
-Function to call when tick. Passed function must have three arguments, first is seconds of current task, second is seconds of reminder.
+Function to call when tick. Passed function must have three arguments,
+ first is seconds of current task, second is seconds of reminder.
 3rd argument is symbol what is type of timer, such as `task' `short-break' `long-break'
 "
   :type 'function
@@ -59,7 +64,8 @@ Function to call when tick. Passed function must have three arguments, first is 
 
 (defcustom simple-pomodoro-notification-function nil
   "
-Function to call when state changed. Passed function must have one argument, first is symbol what is type of timer, such as `task' `short-break' `long-break', `stopped`.
+Function to call when state changed. Passed function must have one argument,
+ first is symbol what is type of timer, such as `task' `short-break' `long-break', `stopped`.
 "
   :type 'function
   :group 'simple-pomodoro)
@@ -79,7 +85,8 @@ Function to call when state changed. Passed function must have one argument, fir
   "Timer for pomodoro. This timer is used for tick.")
 
 (defvar simple-pomodoro--state 'stopped
-  "State of pomodoro. This value is one of `stopped' `task' `short-break' `long-break'.")
+  "State of pomodoro.
+This value is one of `stopped' `task' `short-break' `long-break'.")
 
 (defvar simple-pomodoro--start-time 0
   "Start time of current `simple-pomodoro--timer'.")
@@ -117,8 +124,7 @@ Function to call when state changed. Passed function must have one argument, fir
           simple-pomodoro--task-count 0
           simple-pomodoro--cycle-count (1+ simple-pomodoro--cycle-count)))
    (t
-    (error "Invalid state: %s" state))
-   )
+    (error "Invalid state: %s" state)))
 
   (simple-pomodoro--notify simple-pomodoro--state))
 
@@ -126,7 +132,8 @@ Function to call when state changed. Passed function must have one argument, fir
   "Tick function for pomodoro. This function calls per second."
 
   (let* ((elapsed-time (time-since simple-pomodoro--start-time))
-         (duration-time (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time)))
+         (total-duration-seconds (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time))
+         (duration-time (time-subtract total-duration-seconds elapsed-time)))
     (when (and simple-pomodoro-tick-function
                (functionp simple-pomodoro-tick-function))
       (funcall simple-pomodoro-tick-function
@@ -146,14 +153,12 @@ Function to call when state changed. Passed function must have one argument, fir
   ;; stop timer first.
   (simple-pomodoro--stop-timer)
   
-  (let* ((start-time (time-to-seconds))
-         (end-time (time-add start-time (format "%d min" minutes))))
+  (let* ((start-time (time-convert nil 'integer))
+         (end-time (time-add start-time (* 60 minutes))))
     (setq simple-pomodoro--start-time start-time
           simple-pomodoro--end-time end-time
           simple-pomodoro--timer (run-at-time (format "%d min" minutes) nil #'simple-pomodoro--finish)
-          simple-pomodoro--tick-timer (run-at-time t 1 #'simple-pomodoro--tick))
-    )
-  )
+          simple-pomodoro--tick-timer (run-at-time t 1 #'simple-pomodoro--tick))))
 
 (defun simple-pomodoro--stop-timer ()
   "Stop timer for pomodoro."
@@ -164,11 +169,11 @@ Function to call when state changed. Passed function must have one argument, fir
   (when (and simple-pomodoro--tick-timer
              (timerp simple-pomodoro--tick-timer))
     (cancel-timer simple-pomodoro--tick-timer))
+  
   (setq simple-pomodoro--timer nil
         simple-pomodoro--tick-timer nil
         simple-pomodoro--start-time 0
-        simple-pomodoro--end-time 0
-        ))
+        simple-pomodoro--end-time 0))
 
 (defun simple-pomodoro-reset ()
   "Reset cycle and stop timer."
