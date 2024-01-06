@@ -22,7 +22,6 @@
 
 (eval-when-compile
   (require 'cl-lib))
-(require 'notification)
 
 (defgroup simple-pomodoro
   nil
