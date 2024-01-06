@@ -12,6 +12,11 @@
 ;;
 ;; simple-pomodoro.el provides functionalities to count pomodoro and manage timer for it.
 ;;
+;; Start pomodoro timer
+;;   M-x simple-pomodoro-start
+;;
+;; Reset pomodoro timer and count
+;;   M-x simple-pomodoro-reset
 
 ;;; Code:
 
@@ -27,22 +32,22 @@
 
 (defcustom simple-pomodoro-task-time 25
   "Minutes of task"
-  :type '(integer)
+  :type 'integer
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-short-break-time 5
   "Minutes of short break"
-  :type '(integer)
+  :type 'integer
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-long-break-time 15
   "Minutes of long break"
-  :type '(integer)
+  :type 'integer
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-cycle-task-count 4
   "Count of a cycle"
-  :type '(integer)
+  :type 'integer
   :group 'simple-pomodoro)
 
 (defcustom simple-pomodoro-tick-function nil
@@ -50,13 +55,16 @@
 Function to call when tick. Passed function must have three arguments, first is seconds of current task, second is seconds of reminder.
 3rd argument is symbol what is type of timer, such as `task' `short-break' `long-break'
 "
-  :type '(function)
+  :type 'function
   :group 'simple-pomodoro)
 
 ;; global variables
 
 (defvar simple-pomodoro--task-count 0
   "Current count of task. This value reset when call `simple-pomodoro-reset'.")
+
+(defvar simple-pomodoro--cycle-count 0
+  "Current cycle of pomodoro. This value reset when call `simple-pomodoro-reset'.")
 
 (defvar simple-pomodoro--timer nil
   "Timer for pomodoro.")
@@ -93,7 +101,9 @@ Function to call when tick. Passed function must have three arguments, first is 
    ((eq state 'short-break)
     (setq simple-pomodoro--state 'stopped))
    ((eq state 'long-break)
-    (setq simple-pomodoro--state 'stopped))
+    (setq simple-pomodoro--state 'stopped
+          simple-pomodoro--task-count 0
+          simple-pomodoro--cycle-count (1+ simple-pomodoro--cycle-count)))
    (t
     (error "Invalid state: %s" state))
    )
@@ -119,6 +129,10 @@ Function to call when tick. Passed function must have three arguments, first is 
 
 (defun simple-pomodoro--start-timer (minutes)
   "Start timer for pomodoro with `MINUTES'."
+
+  ;; stop timer first.
+  (simple-pomodoro--stop-timer)
+  
   (let* ((start-time (time-to-seconds))
          (end-time (time-add start-time (format "%d min" minutes))))
     (setq simple-pomodoro--start-time start-time
@@ -149,6 +163,7 @@ Function to call when tick. Passed function must have three arguments, first is 
   (simple-pomodoro--stop-timer)
   
   (setq simple-pomodoro--task-count 0
+        simple-pomodoro--cycle-count 0
         simple-pomodoro--state 'stopped
         ))
 
