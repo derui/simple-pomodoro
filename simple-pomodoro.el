@@ -32,8 +32,7 @@
 
   (defmacro sps--set (slot value)
     "internal macro to set value for global state. This macro is used only byte compile."
-    `(setf (cl-struct-slot-value 'simple-pomodoro--internal-state ,slot simple-pomodoro--state) ,value))
-  )
+    `(setf (cl-struct-slot-value 'simple-pomodoro--internal-state ,slot simple-pomodoro--state) ,value)))
 
 (defgroup simple-pomodoro
   nil
@@ -239,4 +238,10 @@ current timer.
   "Return current state of pomodoro."
   (sps--get 'kind))
 
+(eval-when-compile
+  ;; remove internal macro.
+  (fmakunbound 'sps--get)
+  (fmakunbound 'sps--set))
+
 (provide 'simple-pomodoro)
+
