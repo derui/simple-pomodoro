@@ -25,7 +25,15 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'cl-lib))
+  (require 'cl-lib)
+  (defmacro sps--get (slot)
+    "internal macro to get value of global state. This macro is used only byte compile."
+    `(cl-struct-slot-value 'simple-pomodoro--internal-state ,slot simple-pomodoro--state))
+
+  (defmacro sps--set (slot value)
+    "internal macro to set value for global state. This macro is used only byte compile."
+    `(setf (cl-struct-slot-value 'simple-pomodoro--internal-state ,slot simple-pomodoro--state) ,value))
+  )
 
 (defgroup simple-pomodoro
   nil
@@ -76,7 +84,7 @@ Function to call when state changed. Passed function must have one argument,
 
 ;; global variables
 
-(cl-defstruct simple-pomodoro-state
+(cl-defstruct (simple-pomodoro--internal-state (:constructor simple-pomodoro--internal-state-create))
   "State of pomodoro."
   (kind 'stopped)
   (task-count 0)
@@ -86,7 +94,7 @@ Function to call when state changed. Passed function must have one argument,
   (start-time 0)
   (end-time 0))
 
-(defvar simple-pomodoro--state (make-simple-pomodoro-state)
+(defvar simple-pomodoro--state (simple-pomodoro--state-create)
   "Global states of simple-pomodoro")
 
 ;; functions
@@ -98,13 +106,13 @@ Function to call when state changed. Passed function must have one argument,
 
 (defun simple-pomodoro--update-state (kind)
   "Update some state of pomodoro from `KIND'."
-  (setf (simple-pomodoro-state-kind simple-pomodoro--state) kind)
+  (sps--set 'kind kind)
   (cl-case kind
     (task
-     (setf (simple-pomodoro-state-task-count simple-pomodoro--state) (1+ (simple-pomodoro-state-task-count simple-pomodoro--state))))
+     (sps--set 'task-count (1+ (sps--get 'task-count))))
     (long-break
-     (setf (simple-pomodoro-state-cycle-count simple-pomodoro--state) (1+ (simple-pomodoro-state-cycle-count simple-pomodoro--state))
-           (simple-pomodoro-state-task-count simple-pomodoro--state) 0))
+     (sps--set 'cycle-count (1+ (sps--get 'cycle-count)))
+     (sps--set 'task-count 0))
     (t nil)))
 
 (defun simple-pomodoro--next-state (kind)
@@ -112,18 +120,25 @@ Function to call when state changed. Passed function must have one argument,
   (cl-case kind
     (stopped 'task)
     (task
-     (let ((task-count (simple-pomodoro-state-task-count simple-pomodoro--state)))
-       (if (<= simple-pomodoro-cycle-task-count task-count)
-           'long-break
-         'short-break)))
+     (if (<= simple-pomodoro-cycle-task-count (sps--get 'task-count))
+         'long-break
+       'short-break))
     (short-break 'stopped)
     (long-break 'stopped)
     (t
      (error "Invalid state: %s" kind))))
 
+(defun simple-pomodoro--timer-minutes (kind)
+  "Return minutes of timer from `KIND'."
+  (cl-case kind
+    (task simple-pomodoro-task-time)
+    (short-break simple-pomodoro-short-break-time)
+    (long-break simple-pomodoro-long-break-time)
+    (t (error "Invalid state: %s" kind))))
+
 (defun simple-pomodoro--tick ()
   "Tick function for pomodoro. This function calls per second."
-  (unless (eq (simple-pomodoro-state-kind simple-pomodoro--state) 'stopped)
+  (unless (eq (sps--get 'kind) 'stopped)
     (let* ((measured (simple-pomodoro-measuring-time))
            (elapsed (car measured))
            (duration (cdr measured)))
@@ -148,12 +163,9 @@ Function to call when state changed. Passed function must have one argument,
       (long-break (simple-pomodoro--start-timer simple-pomodoro-long-break-time))
       (t nil))))
 
-(defun simple-pomodoro--start-timer (minutes)
-  "Start timer for pomodoro with `MINUTES'."
+(defun simple-pomodoro--start-timer (kind)
+  "Start timer for pomodoro with `KIND'."
 
-  ;; stop timer first.
-  (simple-pomodoro--stop-timer)
-  
   (let* ((start-time (time-convert nil 'integer))
          (end-time (time-add start-time (* 60 minutes))))
     (setq simple-pomodoro--start-time start-time
@@ -163,23 +175,35 @@ Function to call when state changed. Passed function must have one argument,
 
 (defun simple-pomodoro--stop-timer ()
   "Stop timer for pomodoro."
-  (dolist (timer (list (simple-pomodoro-state-timer simple-pomodoro--state)
-                       (simple-pomodoro-state-tick-timer simple-pomodoro--state)))
-    (and (timerp timer)
-         (cancel-timer timer)
-         (setf timer nil))))
+  (let ((measure (simple-pomodoro-measuring-time))
+        (kind (simple-pomodoro-current-state)))
+    (dolist (slot '(timer tick-timer))
+      (and (timerp (sps--get slot))
+           (cancel-timer (sps--get slot))
+           (sps--set slot nil)))
+    (when measure
+      (let* ((elapsed (car measure))
+             (duration (cdr measure)))
+        (when (and simple-pomodoro-tick-function
+                   (functionp simple-pomodoro-tick-function))
+          (funcall simple-pomodoro-tick-function
+                   elapsed
+                   duration
+                   kind))))
+    )
+  )
 
 (defun simple-pomodoro-reset ()
   "Stop timer and reset all state."
   (interactive)
   (simple-pomodoro--stop-timer)
 
-  (setq simple-pomodoro--state (make-simple-pomodoro-state)))
+  (setq simple-pomodoro--state (simple-pomodoro--internal-state-crete)))
 
 (defun simple-pomodoro--timer-running-p ()
   "Return `t' if timer is running."
-  (or (timerp (simple-pomodoro-state-timer simple-pomodoro--state))
-      (timerp (simple-pomodoro-state-tick-timer simple-pomodoro--state))))
+  (or (timerp (sps--get 'timer))
+      (timerp (sps--get 'tick-timer))))
 
 (defun simple-pomodoro-start ()
   "Start pomodoro."
@@ -188,7 +212,7 @@ Function to call when state changed. Passed function must have one argument,
       (progn
         (message "Pomodoro is already running")
         (cl-return))
-    (let ((next-state (simple-pomodoro--next-state (simple-pomodoro-state-kind simple-pomodoro--state))))
+    (let ((next-state (simple-pomodoro--next-state (sps--get 'kind))))
       (simple-pomodoro--update-state next-state)
       (simple-pomodoro--start-timer (cl-case next-state
                                       (task simple-pomodoro-task-time)
@@ -202,18 +226,17 @@ Time is cons, car is elapsed seconds from start, cdr is duration seconds of
 current timer.
 `simple-pomodoro-state' is returned `STOPPED', this function returnes nil.
 "
-  (let ((state simple-pomodoro--state))
-    (cl-case (simple-pomodoro-current-state)
-      (stopped nil)
-      (t (let* ((elapsed-time (time-since (simple-pomodoro-state-start-time state)))
-                (total-duration-seconds (time-subtract (simple-pomodoro-state-end-time state)
-                                                       (simple-pomodoro-state-start-time state)))
-                (duration-time (time-subtract total-duration-seconds elapsed-time)))
-           (cons (time-to-seconds elapsed-time)
-                 (time-to-seconds duration-time)))))))
+  (cl-case (simple-pomodoro-current-state)
+    (stopped nil)
+    (t (let* ((elapsed-time (time-since (sps--get 'start-time)))
+              (total-duration-seconds (time-subtract (sps--get 'end-time)
+                                                     (sps--get 'start-time)))
+              (duration-time (time-subtract total-duration-seconds elapsed-time)))
+         (cons (time-to-seconds elapsed-time)
+               (time-to-seconds duration-time))))))
 
 (defun simple-pomodoro-current-state ()
   "Return current state of pomodoro."
-  (simple-pomodoro-state-kind simple-pomodoro--state))
+  (sps--get 'kind))
 
 (provide 'simple-pomodoro)
