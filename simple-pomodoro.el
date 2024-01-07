@@ -92,7 +92,7 @@ Function to call when state changed. Passed function must have one argument,
   (tick-timer nil)
   (time-keeper nil))
 
-(defvar simple-pomodoro--state (simple-pomodoro--state-create)
+(defvar simple-pomodoro--state (simple-pomodoro--internal-state-create)
   "Global states of simple-pomodoro")
 
 ;; functions
