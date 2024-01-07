@@ -57,7 +57,10 @@
   "
 Function to call when tick. Passed function must have three arguments,
  first is seconds of current task, second is seconds of reminder.
-3rd argument is symbol what is type of timer, such as `task' `short-break' `long-break'
+3rd argument is symbol what is type of timer, such as `task' `short-break'
+ `long-break'.
+
+Do not call function if state is `stopped'.
 "
   :type 'function
   :group 'simple-pomodoro)
@@ -65,7 +68,8 @@ Function to call when tick. Passed function must have three arguments,
 (defcustom simple-pomodoro-notification-function nil
   "
 Function to call when state changed. Passed function must have one argument,
- first is symbol what is type of timer, such as `task' `short-break' `long-break', `stopped`.
+ first is symbol what is type of timer, such as `task' `short-break'
+ `long-break', `stopped'.
 "
   :type 'function
   :group 'simple-pomodoro)
@@ -76,7 +80,8 @@ Function to call when state changed. Passed function must have one argument,
   "Current count of task. This value reset when call `simple-pomodoro-reset'.")
 
 (defvar simple-pomodoro--cycle-count 0
-  "Current cycle of pomodoro. This value reset when call `simple-pomodoro-reset'.")
+  "Current cycle of pomodoro.
+This value reset when call `simple-pomodoro-reset'.")
 
 (defvar simple-pomodoro--timer nil
   "Timer for pomodoro.")
@@ -200,7 +205,8 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
 
 (defun simple-pomodoro-measuring-time ()
   "Return current time of pomodoro if counted.
-Time is cons, car is elapsed seconds from start, cdr is duration seconds of current timer.
+Time is cons, car is elapsed seconds from start, cdr is duration seconds of
+current timer.
 `simple-pomodoro-state' is returned `STOPPED', this function returnes nil.
 "
   (pcase (simple-pomodoro-state)
