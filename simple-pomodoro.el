@@ -102,45 +102,54 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
              (functionp simple-pomodoro-notification-function))
     (funcall simple-pomodoro-notification-function state)))
 
+(defun simple-pomodoro--update-counts (state)
+  "Update task count from `STATE'."
+  (pcase state
+    ('task
+     (setq simple-pomodoro--task-count (1+ simple-pomodoro--task-count)))
+    ('long-break
+     (setq simple-pomodoro--task-count 0
+           simple-pomodoro--cycle-count (1+ simple-pomodoro--cycle-count)))
+    (_ nil)))
+
 (defun simple-pomodoro--next-state (state)
   "Change state of pomodoro to next state from `STATE'."
   (simple-pomodoro--stop-timer)
   
-  (cond
-   ((eq state 'stopped)
-    (setq simple-pomodoro--state 'task
-          simple-pomodoro--task-count (1+ simple-pomodoro--task-count))
-    (simple-pomodoro--start-timer simple-pomodoro-task-time))
-   ((eq state 'task)
-    (if (<= simple-pomodoro-cycle-task-count simple-pomodoro--task-count )
-        (progn
-          (setq simple-pomodoro--state 'long-break)
-          (simple-pomodoro--start-timer simple-pomodoro-long-break-time))
-      (progn
-        (setq simple-pomodoro--state 'short-break)
-        (simple-pomodoro--start-timer simple-pomodoro-short-break-time))))
-   ((eq state 'short-break)
-    (setq simple-pomodoro--state 'stopped))
-   ((eq state 'long-break)
-    (setq simple-pomodoro--state 'stopped
-          simple-pomodoro--task-count 0
-          simple-pomodoro--cycle-count (1+ simple-pomodoro--cycle-count)))
-   (t
-    (error "Invalid state: %s" state)))
+  (pcase state
+    ('stopped
+     (setq simple-pomodoro--state 'task)
+     (simple-pomodoro--start-timer simple-pomodoro-task-time))
+    ('task
+     (if (<= simple-pomodoro-cycle-task-count simple-pomodoro--task-count )
+         (progn
+           (setq simple-pomodoro--state 'long-break)
+           (simple-pomodoro--start-timer simple-pomodoro-long-break-time))
+       (progn
+         (setq simple-pomodoro--state 'short-break)
+         (simple-pomodoro--start-timer simple-pomodoro-short-break-time))))
+    ('short-break
+     (setq simple-pomodoro--state 'stopped))
+    ('long-break
+     (setq simple-pomodoro--state 'stopped))
+    (_
+     (error "Invalid state: %s" state)))
 
-  (simple-pomodoro--notify simple-pomodoro--state))
+  (let ((state (simple-pomodoro-state)))
+    (simple-pomodoro--update-task-count state)
+    (simple-pomodoro--notify state)))
 
 (defun simple-pomodoro--tick ()
   "Tick function for pomodoro. This function calls per second."
 
-  (let* ((elapsed-time (time-since simple-pomodoro--start-time))
-         (total-duration-seconds (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time))
-         (duration-time (time-subtract total-duration-seconds elapsed-time)))
+  (let* ((measured (simple-pomodoro-measuring-time))
+         (elapsed (car measured))
+         (duration (cdr measured)))
     (when (and simple-pomodoro-tick-function
                (functionp simple-pomodoro-tick-function))
       (funcall simple-pomodoro-tick-function
-               (time-to-seconds elapsed-time)
-               (time-to-seconds duration-time)
+               elapsed
+               duration
                simple-pomodoro--state))))
 
 (defun simple-pomodoro--finish ()
@@ -188,5 +197,24 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
   "Start pomodoro."
   (interactive)
   (simple-pomodoro--next-state simple-pomodoro--state))
+
+(defun simple-pomodoro-measuring-time ()
+  "Return current time of pomodoro if counted.
+Time is cons, car is elapsed seconds from start, cdr is duration seconds of current timer.
+`simple-pomodoro-state' is returned `STOPPED', this function returnes nil.
+"
+  (pcase (simple-pomodoro-state)
+    ('stopped nil)
+    (_ (let* ((elapsed-time (time-since simple-pomodoro--start-time))
+              (total-duration-seconds (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time))
+              (duration-time (time-subtract total-duration-seconds elapsed-time)))
+         (cons (time-to-seconds elapsed-time)
+               (time-to-seconds duration-time)))))
+  
+(defun simple-pomodoro-state ()
+  "Return current state of pomodoro."
+  simple-pomodoro--state)
+
+
 
 (provide 'simple-pomodoro)
