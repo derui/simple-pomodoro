@@ -188,7 +188,7 @@ This value is one of `stopped' `task' `short-break' `long-break'.")
   "Reset cycle and stop timer."
   (interactive)
   (simple-pomodoro--stop-timer)
-  
+
   (setq simple-pomodoro--task-count 0
         simple-pomodoro--cycle-count 0
         simple-pomodoro--state 'stopped))
@@ -209,12 +209,10 @@ Time is cons, car is elapsed seconds from start, cdr is duration seconds of curr
               (total-duration-seconds (time-subtract simple-pomodoro--end-time simple-pomodoro--start-time))
               (duration-time (time-subtract total-duration-seconds elapsed-time)))
          (cons (time-to-seconds elapsed-time)
-               (time-to-seconds duration-time)))))
-  
+               (time-to-seconds duration-time))))))
+
 (defun simple-pomodoro-state ()
   "Return current state of pomodoro."
   simple-pomodoro--state)
-
-
 
 (provide 'simple-pomodoro)
