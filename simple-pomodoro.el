@@ -1,4 +1,4 @@
-;;; simple-pomodoro.el --- A simple pomodoro timer for Emacs -*- lexical-binding: t; -*-
+;;; simple-pomodoro.el --- A simple pomodoro timer for Emacs -*- lexical-binding: t; byte-compile-docstring-max-column: 120; -*-
 ;; Copyright (C) 2024 derui
 
 ;; Author: derui <derutakayu@gmail.com>
