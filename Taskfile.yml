@@ -1,0 +1,27 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  BATCH: emacs -Q --batch -L . -L test
+
+tasks:
+   
+  build:
+    sources:
+      - './*.el'
+      - './**/*.el'
+    generates:
+      - './*.elc'
+      - './**/*.elc'
+    cmds:
+      - for: sources
+        cmd: echo {{.ITEM}} && {{ .BATCH }} -f batch-byte-compile simple-pomodoro.el
+
+  test:
+    deps: [build]
+    cmds:
+      - '{{ .BATCH }} -l test/simple-pomodoro-tests.el -l ert --eval "(ert-run-tests-batch-and-exit)"'
+  clean:
+    cmds:
+      - find . -type f -name "*.elc" | xargs rm

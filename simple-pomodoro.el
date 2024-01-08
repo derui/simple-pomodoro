@@ -148,11 +148,7 @@ Function to call when state changed. Passed function must have one argument,
 
     (simple-pomodoro--update-task-count next-state)
     (simple-pomodoro--notify next-state)
-
-    (cl-case next-state
-      (short-break (simple-pomodoro--start-timer simple-pomodoro-short-break-time))
-      (long-break (simple-pomodoro--start-timer simple-pomodoro-long-break-time))
-      (t nil))))
+    (simple-pomodoro--start-timer next-state)))
 
 (defun simple-pomodoro--minutes-of-kind (kind)
   "Return minutes of `KIND'."
@@ -160,16 +156,17 @@ Function to call when state changed. Passed function must have one argument,
     (task simple-pomodoro-task-time)
     (short-break simple-pomodoro-short-break-time)
     (long-break simple-pomodoro-long-break-time)
-    (t 0)))
+    (t nil)))
 
 (defun simple-pomodoro--start-timer (kind)
   "Start timer for pomodoro with `KIND'."
 
-  (let* ((minutes (simple-pomodoro--minutes-of-kind kind))
-         (seconds (* minutes 60)))
-    (sps--set 'time-keeper (cons 0 seconds))
-    (sps--set 'timer (run-at-time (format "%d sec" seconds) nil #'simple-pomodoro--finish))
-    (sps--set 'tick-timer (run-at-time t 1 #'simple-pomodoro--tick))))
+  (let* ((minutes (simple-pomodoro--minutes-of-kind kind)))
+    (when minutes
+      (let ((seconds (* minutes 60)))
+        (sps--set 'time-keeper (cons 0 seconds))
+        (sps--set 'timer (run-at-time (format "%d sec" seconds) nil #'simple-pomodoro--finish))
+        (sps--set 'tick-timer (run-at-time t 1 #'simple-pomodoro--tick))))))
 
 (defun simple-pomodoro--stop-timer ()
   "Stop timer for pomodoro."
@@ -199,11 +196,7 @@ Function to call when state changed. Passed function must have one argument,
         (cl-return))
     (let ((next-state (simple-pomodoro--next-state (sps--get 'kind))))
       (simple-pomodoro--update-task-count next-state)
-      (simple-pomodoro--start-timer (cl-case next-state
-                                      (task simple-pomodoro-task-time)
-                                      (short-break simple-pomodoro-short-break-time)
-                                      (long-break simple-pomodoro-long-break-time)
-                                      (t (error "Invalid state: %s" next-state)))))))
+      (simple-pomodoro--start-timer next-state))))
 
 (defun simple-pomodoro-measuring-time ()
   "Return current time of pomodoro if counted.

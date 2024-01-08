@@ -13,7 +13,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'cort)
+(require 'ert)
 (require 'simple-pomodoro)
 
 ;; support macro from source.
@@ -25,8 +25,40 @@
   "internal macro to set value for global state. This macro is used only byte compile."
   `(setf (cl-struct-slot-value 'simple-pomodoro--internal-state ,slot simple-pomodoro--state) ,value))
 
-(cort-deftest start-task
-              (cl-letf (((symbol-function 'run-at-time) (lambda (&rest) nil)))
-                (simple-pomodoro-start)
-                (:equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-task-time))))
-              )
+(ert-deftest start-task ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) '(0 0 0 0))))
+    (simple-pomodoro-reset)
+    (simple-pomodoro-start)
+    (should (equal (sps--get 'task-count) 1))
+    (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-task-time))))
+    (should (equal (simple-pomodoro-current-state) 'task))))
+
+(ert-deftest ticked-time ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) '(0 0 0 0))))
+    (simple-pomodoro-reset)
+    (simple-pomodoro-start)
+    (simple-pomodoro--tick)
+    (should (equal (sps--get 'task-count) 1))
+    (should (equal (sps--get 'time-keeper) (cons 1 (* 60 simple-pomodoro-task-time))))
+    (should (equal (simple-pomodoro-current-state) 'task))))
+
+(ert-deftest finish-task ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (simple-pomodoro-reset)
+    (simple-pomodoro-start)
+    (simple-pomodoro--tick)
+    (simple-pomodoro--finish)
+    (should (equal (sps--get 'task-count) 1))
+    (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-short-break-time))))
+    (should (equal (simple-pomodoro-current-state) 'short-break))))
+
+(ert-deftest call-notification-function-after-finished ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-notification-function (lambda (state) (should (equal state 'short-break)))))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)
+      (should (equal (sps--get 'task-count) 1))
+      (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-short-break-time))))
+      (should (equal (simple-pomodoro-current-state) 'short-break)))))
