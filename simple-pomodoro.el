@@ -145,7 +145,6 @@ Function to call when state changed. Passed function must have one argument,
   (simple-pomodoro--stop-timer)
   
   (let ((next-state (simple-pomodoro--next-state (simple-pomodoro-current-state))))
-
     (simple-pomodoro--update-task-count next-state)
     (simple-pomodoro--notify next-state)
     (simple-pomodoro--start-timer next-state)))

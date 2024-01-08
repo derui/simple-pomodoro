@@ -62,3 +62,21 @@
       (should (equal (sps--get 'task-count) 1))
       (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-short-break-time))))
       (should (equal (simple-pomodoro-current-state) 'short-break)))))
+
+(ert-deftest call-notification-function-for-long-break ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-cycle-task-count 2))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)         ;finish task
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)         ;finish short break
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)         ;finish task
+      (let ((simple-pomodoro-notification-function (lambda (state) (should (equal state 'long-break)))))
+        (simple-pomodoro--tick)
+        (simple-pomodoro--finish)
+        (should (equal (sps--get 'task-count) 0))
+        (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-long-break-time))))
+        (should (equal (simple-pomodoro-current-state) 'long-break))))))
