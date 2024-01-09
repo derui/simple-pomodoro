@@ -80,3 +80,13 @@
         (should (equal (sps--get 'task-count) 0))
         (should (equal (sps--get 'time-keeper) (cons 0 (* 60 simple-pomodoro-long-break-time))))
         (should (equal (simple-pomodoro-current-state) 'long-break))))))
+
+(ert-deftest call-tick-function ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-tick-function (lambda (elapsed duration state)
+                                           (should (eq state 'task))
+                                           (should (equal elapsed 1))
+                                           (should (equal duration (1- (* 60 simple-pomodoro-task-time)))))))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick))))
