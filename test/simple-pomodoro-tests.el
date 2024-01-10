@@ -105,4 +105,9 @@
       (cl-letf (((symbol-function 'simple-pomodoro--timer-running-p) (lambda () t)))
         (simple-pomodoro-stop)
         (should (equal 'stopped (simple-pomodoro-current-state)))
-        (should (equal nil (simple-pomodoro-measuring-time)))))))
+        (should (equal nil (simple-pomodoro-measuring-time))))
+      ;; start from stored timer
+      (cl-letf (((symbol-function 'simple-pomodoro--timer-running-p) (lambda () nil)))
+        (simple-pomodoro-start)
+        (should (equal 'task (simple-pomodoro-current-state)))
+        (should (equal (cons 1 (1- (* 60 simple-pomodoro-task-time))) (simple-pomodoro-measuring-time)))))))

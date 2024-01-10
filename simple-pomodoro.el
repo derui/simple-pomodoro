@@ -163,11 +163,12 @@ Function to call when state changed. Passed function must have one argument,
 (defun simple-pomodoro--start-timer (kind &optional elapsed-seconds)
   "Start timer for pomodoro with `KIND'."
 
-  (let* ((seconds (- (or (simple-pomodoro--seconds-of-kind kind) 0) (or elapsed-seconds 0)))
-         (start (or elapsed-seconds 0)))
+  (let* ((start (or elapsed-seconds 0))
+         (duration (or (simple-pomodoro--seconds-of-kind kind) 0))
+         (seconds (- duration start)))
     (when (< 0 seconds)
       (sps--set 'kind kind)
-      (sps--set 'time-keeper (cons start seconds))
+      (sps--set 'time-keeper (cons start duration))
       (sps--set 'timer (run-at-time (format "%d sec" seconds) nil #'simple-pomodoro--finish))
       (sps--set 'tick-timer (run-at-time t 1 #'simple-pomodoro--tick)))))
 
@@ -200,9 +201,10 @@ Function to call when state changed. Passed function must have one argument,
         (cl-return))
     (pcase (simple-pomodoro-current-state)
       ('stopped
-       (simple-pomodoro--start-timer (cdr (sps--get 'kind))))
-      (_
-       (let ((next-state (simple-pomodoro--next-state (simple-pomodoro-current-state))))
+       (let ((state (sps--get 'kind)))
+         (simple-pomodoro--start-timer (cadr state) (nth 2 state))))
+      (kind
+       (let ((next-state (simple-pomodoro--next-state kind)))
          (simple-pomodoro--start-timer next-state))))))
 
 (defun simple-pomodoro-stop ()
@@ -213,7 +215,7 @@ Function to call when state changed. Passed function must have one argument,
         (message "Pomodoro is already stopped")
         (cl-return))
     (simple-pomodoro--stop-timer)
-    (sps--set 'kind `(stopped . ,(simple-pomodoro-current-state)))))
+    (sps--set 'kind `(stopped ,(simple-pomodoro-current-state) ,(car (sps--get 'time-keeper))))))
 
 (defun simple-pomodoro-measuring-time ()
   "Return current time of pomodoro if counted.
@@ -231,7 +233,7 @@ current timer.
 (defun simple-pomodoro-current-state ()
   "Return current state of pomodoro."
   (pcase (sps--get 'kind)
-    (`(stopped . ,_) 'stopped)
+    (`(stopped ,_ ,_) 'stopped)
     (state state)))
 
 (eval-when-compile
