@@ -5,7 +5,7 @@
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "27.1") alert)
+;; Package-Requires: ((emacs "27.1") (alert "1.2"))
 ;; Keywords: timer, notification
 
 ;;; Commentary:
