@@ -16,7 +16,7 @@ We recommended to use [leaf.el](https://github.com/conao3/leaf.el) with straight
 Start timer with new task
   M-x simple-pomodoro-start
 
-Stop timer without advancing state
+Stop timer.
   M-x simple-pomodoro-stop
   
 Reset current pomodoro state
@@ -60,11 +60,12 @@ Those functions are extension points or utility function from this package.
         (pcase 
           ('task
            (notification-notify :title "Pomodoro" :body "Task start"))
+          ('task-finished
+           (notification-notify :title "Pomodoro" :body "Task finished"))
           ('short-break
            (notification-notify :title "Pomodoro" :body "Short break start"))
           (`long-break
-           (notification-notify :title "Pomodoro" :body "Long break start"))
-          (_ nil))))
+           (notification-notify :title "Pomodoro" :body "Long break start")))))
 ```
 
 ## With org-clock

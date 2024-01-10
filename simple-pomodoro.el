@@ -15,6 +15,9 @@
 ;; Start pomodoro timer
 ;;   M-x simple-pomodoro-start
 ;;
+;; Stop pomodoro timer
+;;   M-x simple-pomodoro-stop
+;;
 ;; Reset pomodoro timer and count
 ;;   M-x simple-pomodoro-reset
 
