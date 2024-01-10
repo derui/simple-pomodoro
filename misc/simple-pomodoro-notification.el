@@ -27,7 +27,7 @@
 (defvar simple-pomodoro-notification--alert-style
   (cond
    ((eq system-type 'darwin) 'osx-notifier)
-   (t 'notification))
+   (t 'notifications))
   "Notification style for alert. This variable is defined under user's environment.")
 
 ;; functions
