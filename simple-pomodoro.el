@@ -64,6 +64,12 @@
   :type 'integer
   :group 'simple-pomodoro)
 
+
+(defcustom simple-pomodoro-auto-short-break nil
+  "If this value is `t', pomodoro automatically start short break after task finished."
+  :type 'boolean
+  :group 'simple-pomodoro)
+
 (defcustom simple-pomodoro-tick-function nil
   "
 Function to call when tick. Passed function must have three arguments,
@@ -154,7 +160,13 @@ Function to call when state changed. Passed function must have one argument,
   (let* ((next-state (simple-pomodoro--next-state (simple-pomodoro-current-state))))
     (simple-pomodoro--update-task-count next-state)
     (simple-pomodoro--notify next-state)
-    (sps--set 'kind next-state)))
+    (sps--set 'kind next-state))
+
+  ;; start short break automatically
+  (when (and simple-pomodoro-auto-short-break
+             (eq 'task-finished (simple-pomodoro-current-state))
+             (y-or-n-p "Start short break?"))
+    (simple-pomodoro--start-timer 'short-break)))
 
 (defun simple-pomodoro--seconds-of-kind (kind)
   "Return minutes of `KIND'."
@@ -171,6 +183,7 @@ Function to call when state changed. Passed function must have one argument,
          (duration (or (simple-pomodoro--seconds-of-kind kind) 0))
          (seconds (- duration start)))
     (when (< 0 seconds)
+      (simple-pomodoro--notify kind)
       (sps--set 'kind kind)
       (sps--set 'time-keeper (cons start duration))
       (sps--set 'timer (run-at-time (format "%d sec" seconds) nil #'simple-pomodoro--finish))

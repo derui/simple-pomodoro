@@ -55,7 +55,8 @@
 
 (ert-deftest call-notification-function-after-finished ()
   (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
-    (let ((simple-pomodoro-notification-function (lambda (state) (should (equal state 'task-finished)))))
+    (let ((simple-pomodoro-notification-function (lambda (state) (should (or (equal state 'task-finished)
+                                                                             (equal state 'task))))))
       (simple-pomodoro-reset)
       (simple-pomodoro-start)
       (simple-pomodoro--tick)
@@ -76,7 +77,8 @@
       (simple-pomodoro-start)           ; start new task
       (simple-pomodoro--tick)
       (simple-pomodoro--finish)         ;finish task, then start long-break
-      (let ((simple-pomodoro-notification-function (lambda (state) (should (equal state 'long-break-finished)))))
+      (let ((simple-pomodoro-notification-function (lambda (state) (should (or (equal state 'long-break-finished)
+                                                                               (equal state 'long-break))))))
         (simple-pomodoro-start)           ; start new long-break
         (simple-pomodoro--tick)
         (simple-pomodoro--finish)
@@ -98,7 +100,8 @@
 (ert-deftest stop-and-restore-timer ()
   (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) t))
             ((symbol-function 'cancel-timer) (lambda (&rest rests) nil)))
-    (let ((simple-pomodoro-notification-function (lambda (state) (should (equal state 'stopped)))))
+    (let ((simple-pomodoro-notification-function (lambda (state) (should (or (equal state 'stopped)
+                                                                             (equal state 'task))))))
       (simple-pomodoro-reset)
       (simple-pomodoro-start)
       (simple-pomodoro--tick)
@@ -111,3 +114,15 @@
         (simple-pomodoro-start)
         (should (equal 'task (simple-pomodoro-current-state)))
         (should (equal (cons 1 (1- (* 60 simple-pomodoro-task-time))) (simple-pomodoro-measuring-time)))))))
+
+(ert-deftest auto-short-break ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) t))
+            ((symbol-function 'y-or-n-p) (lambda (&rest rests) t)))
+    (let ((simple-pomodoro-auto-short-break t))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)
+      ;; start short break automatically.
+      (should (equal 'short-break (simple-pomodoro-current-state)))
+      (should (equal (cons 0 (* 60 simple-pomodoro-short-break-time)) (simple-pomodoro-measuring-time))))))
