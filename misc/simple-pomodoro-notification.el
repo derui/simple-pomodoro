@@ -5,6 +5,7 @@
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
 ;; Version: 0.1.0
+;; Created: 2024
 ;; Package-Requires: ((emacs "27.1") (alert "1.2") (simple-pomodoro "0.1.0"))
 ;; Keywords: timer, notification
 
