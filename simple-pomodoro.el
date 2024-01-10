@@ -195,6 +195,7 @@ Function to call when state changed. Passed function must have one argument,
 
   (setq simple-pomodoro--state (simple-pomodoro--internal-state-create)))
 
+;;;###autoload
 (defun simple-pomodoro-start ()
   "Start pomodoro."
   (interactive)
@@ -210,6 +211,7 @@ Function to call when state changed. Passed function must have one argument,
        (let ((next-state (simple-pomodoro--next-state kind)))
          (simple-pomodoro--start-timer next-state))))))
 
+;;;###autoload
 (defun simple-pomodoro-stop ()
   "Start pomodoro. User can resume from timer if stopped"
   (interactive)
@@ -220,6 +222,7 @@ Function to call when state changed. Passed function must have one argument,
     (simple-pomodoro--stop-timer)
     (sps--set 'kind `(stopped ,(simple-pomodoro-current-state) ,(car (sps--get 'time-keeper))))))
 
+;;;###autoload
 (defun simple-pomodoro-measuring-time ()
   "Return current time of pomodoro if counted.
 Time is cons, car is elapsed seconds from start, cdr is duration seconds of
@@ -233,6 +236,7 @@ current timer.
               (total-duration-seconds (- (cdr (sps--get 'time-keeper)) elapsed-time)))
          (cons elapsed-time total-duration-seconds)))))
 
+;;;###autoload
 (defun simple-pomodoro-current-state ()
   "Return current state of pomodoro."
   (pcase (sps--get 'kind)
