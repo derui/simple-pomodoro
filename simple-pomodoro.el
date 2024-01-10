@@ -115,7 +115,7 @@ Function to call when state changed. Passed function must have one argument,
 (defun simple-pomodoro--next-state (kind)
   "Return state of pomodoro to next state from `KIND'."
   (pcase kind
-    ('(stopped . _) (cdr kind))
+    (`(stopped . ,_) (cdr kind))
     ('initial 'task)
     ('task 'task-finished)
     ('task-finished
@@ -201,7 +201,7 @@ Function to call when state changed. Passed function must have one argument,
     (pcase (simple-pomodoro-current-state)
       ('stopped
        (simple-pomodoro--start-timer (cdr (sps--get 'kind))))
-      (t
+      (_
        (let ((next-state (simple-pomodoro--next-state (simple-pomodoro-current-state))))
          (simple-pomodoro--start-timer next-state))))))
 
@@ -231,7 +231,7 @@ current timer.
 (defun simple-pomodoro-current-state ()
   "Return current state of pomodoro."
   (pcase (sps--get 'kind)
-    ('(stopped . _) 'stopped)
+    (`(stopped . ,_) 'stopped)
     (state state)))
 
 (eval-when-compile

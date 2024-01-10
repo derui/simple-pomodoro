@@ -104,4 +104,5 @@
       (simple-pomodoro--tick)
       (cl-letf (((symbol-function 'simple-pomodoro--timer-running-p) (lambda () t)))
         (simple-pomodoro-stop)
+        (should (equal 'stopped (simple-pomodoro-current-state)))
         (should (equal nil (simple-pomodoro-measuring-time)))))))
