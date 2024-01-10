@@ -68,6 +68,14 @@ Those functions are extension points or utility function from this package.
            (notification-notify :title "Pomodoro" :body "Long break start")))))
 ```
 
+### Extension package ###
+simple-pomodoro provides some misc packages in `misc/` . You can use packages with `require` in your init.el or from package manager.
+
+- `simple-pomodoro-notification`
+  - This package provides common notification function for `simple-pomodoro-notification-function`
+  - Provides some customization points. Please read comments in the package
+
+
 ## With org-clock
 If you want to start pomodoro timer when you executes org-clock-in, you can add hook to start `simple-pomodoro-start` 
 
