@@ -126,3 +126,12 @@
       ;; start short break automatically.
       (should (equal 'short-break (simple-pomodoro-current-state)))
       (should (equal (cons 0 (* 60 simple-pomodoro-short-break-time)) (simple-pomodoro-measuring-time))))))
+
+(ert-deftest do-not-expose-notification-error ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-notification-function (lambda (state) (error "errored"))))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick)
+      (simple-pomodoro--finish)
+      (should t))))
