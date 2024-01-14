@@ -13,9 +13,7 @@
 ;;
 ;; simple-pomodoro-notification.el provides function to notify user when state of pomodoro is changed.
 ;;
-;;: Customization:
-;; You can customize some variables. Use customize-group or setq.
-;;   M-x customize-group simple-pomodoro
+;;; Customization:
 
 ;;; Code:
 
