@@ -77,7 +77,7 @@ simple-pomodoro provides some misc packages in `misc/` . You can use packages wi
 
 ```emacs-lisp
 (leaf simple-pomodoro
-  :straight (simple-pomodoro :type git :host github :repo "derui/simple-pomodoro")
+  :straight (simple-pomodoro :type git :host github :repo "derui/simple-pomodoro" :files (:defaults "misc/*"))
   
   (leaf simple-pomodoro-notification
     :require t
