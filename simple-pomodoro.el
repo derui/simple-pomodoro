@@ -110,8 +110,9 @@ Function to call when state changed. Passed function must have one argument,
 
 (defun simple-pomodoro--notify (kind)
   "Notify `KIND' to user."
-  (when (functionp simple-pomodoro-notification-function)
-    (funcall simple-pomodoro-notification-function kind)))
+  (ignore-errors
+    (when (functionp simple-pomodoro-notification-function)
+      (funcall simple-pomodoro-notification-function kind))))
 
 (defun simple-pomodoro--update-task-count (kind)
   "Update some state of pomodoro from `KIND'."
