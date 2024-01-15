@@ -87,6 +87,21 @@ simple-pomodoro provides some misc packages in `misc/` . You can use packages wi
 
 This package depends on `alert` package to send notification.
 
+#### default mode line implementation ####
+`simple-pomodoro-mode-line` is default implementation for `simple-pomodoro-tick-function` and mode line element. You can use it with your favorite package manager.
+
+```lisp
+(leaf simple-pomodoro
+  :straight (simple-pomodoro :type git :host github :repo "derui/simple-pomodoro" :files (:defaults "misc/*"))
+  
+  (leaf simple-pomodoro-mode-line
+    :config
+    ;; you should put simple-pomodoro-mode-line-update-text to your simple-pomodoro-notification-function.
+    (setq simple-pomodoro-tick-function #'simple-pomodoro-mode-line-update-text)))
+    
+;; you can use simple-pomodoro-mode-line as mode line element. Put it in mode-line-format.
+```
+
 ## With org-clock
 If you want to start pomodoro timer when you executes org-clock-in, you can add hook to start `simple-pomodoro-start` and `simple-pomodoro-stop`.
 

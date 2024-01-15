@@ -51,6 +51,7 @@
 (defvar simple-pomodoro-mode-line '(:eval (simple-pomodoro-mode-line-text))
   "The element for mode line to display pomodoro remain time")
 
+;;;###autoload
 (defun simple-pomodoro-mode-line-text ()
   "Return text for mode line."
   (let ((text (simple-pomodoro-mode-line--text))
@@ -63,6 +64,7 @@
         ""
       (concat icon text))))
 
+;;;###autoload
 (defun simple-pomodoro-mode-line-update-text ()
   "Update text for mode line. Call this function in `simple-pomodoro-tick-function'"
   (setq simple-pomodoro-mode-line--text
