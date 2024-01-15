@@ -146,3 +146,10 @@
       (simple-pomodoro-mode-line-update-text)
 
       (should (string= "24:59" (simple-pomodoro-mode-line-text))))))
+
+(ert-deftest display-mode-line-for-stopped ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-notification-function (lambda (state) (error "errored"))))
+      (simple-pomodoro-reset)
+
+      (should (string= "" (simple-pomodoro-mode-line-text))))))
