@@ -3,20 +3,22 @@
 version: '3'
 
 vars:
-  BATCH: emacs -Q --batch -L . -L test
+  BATCH: emacs -Q --batch -L . -L misc -L test
 
 tasks:
    
   build:
     sources:
       - './*.el'
-      - './**/*.el'
+      - './misc/*.el'
+      - exclude: './misc/simple-pomodoro-notification.el'
+
     generates:
       - './*.elc'
-      - './**/*.elc'
+      - './misc/*.elc'
     cmds:
       - for: sources
-        cmd: echo {{.ITEM}} && {{ .BATCH }} -f batch-byte-compile simple-pomodoro.el
+        cmd: '{{ .BATCH }} -f batch-byte-compile {{ .ITEM }}'
 
   test:
     deps: [build]

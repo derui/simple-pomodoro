@@ -54,7 +54,7 @@
 ;;;###autoload
 (defun simple-pomodoro-mode-line-text ()
   "Return text for mode line."
-  (let ((text (simple-pomodoro-mode-line--text))
+  (let ((text simple-pomodoro-mode-line--text)
         (icon (cl-case (simple-pomodoro-current-state)
                 (task simple-pomodoro-mode-line-task-icon)
                 (short-break simple-pomodoro-mode-line-short-break-icon)

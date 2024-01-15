@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'simple-pomodoro)
+(require 'simple-pomodoro-mode-line)
 
 ;; support macro from source.
 (defmacro sps--get (slot)
@@ -135,3 +136,13 @@
       (simple-pomodoro--tick)
       (simple-pomodoro--finish)
       (should t))))
+
+(ert-deftest display-mode-line-for-task ()
+  (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
+    (let ((simple-pomodoro-notification-function (lambda (state) (error "errored"))))
+      (simple-pomodoro-reset)
+      (simple-pomodoro-start)
+      (simple-pomodoro--tick)
+      (simple-pomodoro-mode-line-update-text)
+
+      (should (string= "24:59" (simple-pomodoro-mode-line-text))))))
