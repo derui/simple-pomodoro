@@ -192,11 +192,12 @@ Function to call when state changed. Passed function must have one argument,
 
 (defun simple-pomodoro--stop-timer ()
   "Stop timer for pomodoro."
-  (dolist (slot '(timer tick-timer))
-    (and (timerp (sps--get slot))
-         (cancel-timer (sps--get slot))
-         (sps--set slot nil)))
-  )
+  (and (timerp (sps--get 'tick-timer))
+       (cancel-timer (sps--get 'tick-timer))
+       (sps--set 'tick-timer nil))
+  (and (timerp (sps--get 'timer))
+       (cancel-timer (sps--get 'timer))
+       (sps--set 'timer nil)))
 
 (defun simple-pomodoro--timer-running-p ()
   "Return `t' if timer is running."
