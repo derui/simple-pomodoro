@@ -216,9 +216,7 @@ Function to call when state changed. Passed function must have one argument,
   "Start pomodoro."
   (interactive)
   (if (simple-pomodoro--timer-running-p)
-      (progn
-        (message "Pomodoro is already running")
-        (cl-return))
+      (message "Pomodoro is already running")
     (pcase (simple-pomodoro-current-state)
       ('stopped
        (let ((state (sps--get 'kind)))
@@ -232,9 +230,7 @@ Function to call when state changed. Passed function must have one argument,
   "Start pomodoro. User can resume from timer if stopped"
   (interactive)
   (if (not (simple-pomodoro--timer-running-p))
-      (progn
-        (message "Pomodoro is already stopped")
-        (cl-return))
+      (message "Pomodoro is already stopped")
     (simple-pomodoro--stop-timer)
     (sps--set 'kind `(stopped ,(simple-pomodoro-current-state) ,(car (sps--get 'time-keeper))))))
 
