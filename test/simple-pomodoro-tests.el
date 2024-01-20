@@ -53,7 +53,9 @@
     (simple-pomodoro--finish)
     (should (equal (sps--get 'task-count) 1))
     (should (equal (simple-pomodoro-current-state) 'task-finished))
-    (should (not (simple-pomodoro--timer-running-p)))))
+    (should (not (simple-pomodoro--timer-running-p)))
+    (should (not (sps--get 'timer)))
+    (should (not (sps--get 'tick-timer)))))
 
 (ert-deftest call-notification-function-after-finished ()
   (cl-letf (((symbol-function 'run-at-time) (lambda (&rest rests) nil)))
